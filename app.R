@@ -35,32 +35,44 @@ server <- function(input, output, session) {
 
   observeEvent(input$image, {
     req(input$image)
-    infile <- input$image$datapath
-    print(infile)
-    working_path <- file.path("www", input$image$name)
-    file.copy(infile, working_path, overwrite = TRUE)
-    equirectangular_to_hemi_ffmpeg(filename = working_path)
-    get_forest_floor(filename = working_path)
 
-    image_data(input$image$name)
-    hemi_data(paste0(tools::file_path_sans_ext(input$image$name), "_hemi.jpg"))
-    floor_data(paste0(tools::file_path_sans_ext(input$image$name), "_floor.jpg"))
 
-    output$originalImage <- renderUI({
-      req(image_data())
-      tags$img(src = image_data(), style = "max-width: 100%; height: auto;")
+    test_file <- file.path(tempdir(), "write_test.txt")
+
+    # Try writing a file
+    tryCatch({
+      writeLines("Write test successful!", test_file)
+      message("✅ Write access confirmed: ", test_file)
+    }, error = function(e) {
+      message("❌ Write access denied: ", e$message)
     })
 
-    output$hemiImage <- renderUI({
-      req(hemi_data())
-      tags$img(src = hemi_data(), style = "max-width: 100%; height: auto;")
-    })
-
-    output$forestFloorImage <- renderUI({
-      req(floor_data())
-      tags$img(src = floor_data(), style = "max-width: 100%; height: auto;")
-    })
-
+  #   infile <- input$image$datapath
+  #   print(infile)
+  #   working_path <- file.path("www", input$image$name)
+  #   file.copy(infile, working_path, overwrite = TRUE)
+  #   equirectangular_to_hemi_ffmpeg(filename = working_path)
+  #   get_forest_floor(filename = working_path)
+  #
+  #   image_data(input$image$name)
+  #   hemi_data(paste0(tools::file_path_sans_ext(input$image$name), "_hemi.jpg"))
+  #   floor_data(paste0(tools::file_path_sans_ext(input$image$name), "_floor.jpg"))
+  #
+  #   output$originalImage <- renderUI({
+  #     req(image_data())
+  #     tags$img(src = image_data(), style = "max-width: 100%; height: auto;")
+  #   })
+  #
+  #   output$hemiImage <- renderUI({
+  #     req(hemi_data())
+  #     tags$img(src = hemi_data(), style = "max-width: 100%; height: auto;")
+  #   })
+  #
+  #   output$forestFloorImage <- renderUI({
+  #     req(floor_data())
+  #     tags$img(src = floor_data(), style = "max-width: 100%; height: auto;")
+  #   })
+  #
   })
 
 }
