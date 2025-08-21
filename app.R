@@ -33,63 +33,42 @@ server <- function(input, output, session) {
   hemi_data <- reactiveVal(NULL)
   floor_data <- reactiveVal(NULL)
 
+  observeEvent(input$image, {
+    req(input$image)
+    infile <- input$image$datapath
+    print(infile)
+    working_path <- file.path("www", input$image$name)
+    file.copy(infile, working_path, overwrite = TRUE)
+    equirectangular_to_hemi_ffmpeg(filename = working_path)
+    get_forest_floor(filename = working_path)
 
-  # Test write access on startup
-  observe({
-    test_path <- file.path(tempdir(), "write_test.txt")
-    tryCatch({
-      writeLines("Write test successful!", test_path)
-      message("✅ Write access confirmed at: ", test_path)
-    }, error = function(e) {
-      message("❌ Write access failed: ", e$message)
+    image_data(input$image$name)
+    hemi_data(paste0(tools::file_path_sans_ext(input$image$name), "_hemi.jpg"))
+    # floor_data(paste0(tools::file_path_sans_ext(input$image$name), "_zoomed.jpg"))
+
+    # Store all 4 quadrant image paths
+    quadrants <- c("top_left", "top_right", "bottom_left", "bottom_right")
+    zoomed_images <- paste0(tools::file_path_sans_ext(input$image$name), "_", quadrants, "_zoomed.jpg")
+    floor_data(zoomed_images)
+
+    output$originalImage <- renderUI({
+      req(image_data())
+      tags$img(src = image_data(), style = "max-width: 100%; height: auto;")
     })
+
+    output$hemiImage <- renderUI({
+      req(hemi_data())
+      tags$img(src = hemi_data(), style = "max-width: 100%; height: auto;")
+    })
+
+
+    output$forestFloorImage <- renderUI({
+      req(floor_data())
+      tagList(
+        lapply(floor_data(), function(img) {
+          tags$img(src = img, style = "max-width: 48%; margin: 1%; height: auto;")
+        }))})
   })
-
-  # Check if ffmpeg is in PATH
-  ffmpeg_path <- Sys.which("ffmpeg")
-  print(paste("FFmpeg path:", ffmpeg_path))
-
-  # Try to get ffmpeg version
-  result <- tryCatch({
-    system("ffmpeg -version", intern = TRUE)
-  }, error = function(e) {
-    paste("Error:", e$message)
-  })
-  print(result)
-
-  # Check system PATH
-  print(paste("System PATH:", Sys.getenv("PATH")))
-
-  # observeEvent(input$image, {
-  #   req(input$image)
-  #   infile <- input$image$datapath
-  #   print(infile)
-  #   working_path <- file.path("www", input$image$name)
-  #   file.copy(infile, working_path, overwrite = TRUE)
-  #   equirectangular_to_hemi_ffmpeg(filename = working_path)
-  #   get_forest_floor(filename = working_path)
-  #
-  #   image_data(input$image$name)
-  #   hemi_data(paste0(tools::file_path_sans_ext(input$image$name), "_hemi.jpg"))
-  #   floor_data(paste0(tools::file_path_sans_ext(input$image$name), "_floor.jpg"))
-  #
-  #   output$originalImage <- renderUI({
-  #     req(image_data())
-  #     tags$img(src = image_data(), style = "max-width: 100%; height: auto;")
-  #   })
-  #
-  #   output$hemiImage <- renderUI({
-  #     req(hemi_data())
-  #     tags$img(src = hemi_data(), style = "max-width: 100%; height: auto;")
-  #   })
-  #
-  #   output$forestFloorImage <- renderUI({
-  #     req(floor_data())
-  #     tags$img(src = floor_data(), style = "max-width: 100%; height: auto;")
-  #   })
-  #
-  # })
-
 }
 
 shinyApp(ui, server)
