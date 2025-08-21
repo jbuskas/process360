@@ -45,8 +45,20 @@ server <- function(input, output, session) {
     })
   })
 
-  system("which ffmpeg")
+  # Check if ffmpeg is in PATH
+  ffmpeg_path <- Sys.which("ffmpeg")
+  print(paste("FFmpeg path:", ffmpeg_path))
 
+  # Try to get ffmpeg version
+  result <- tryCatch({
+    system("ffmpeg -version", intern = TRUE)
+  }, error = function(e) {
+    paste("Error:", e$message)
+  })
+  print(result)
+
+  # Check system PATH
+  print(paste("System PATH:", Sys.getenv("PATH")))
 
   # observeEvent(input$image, {
   #   req(input$image)
