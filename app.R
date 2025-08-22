@@ -5,6 +5,7 @@ library(magick)
 
 source("equirectangular_to_hemi_ffmpeg.R")
 source("get_forest_floor.R")
+source("get_understory.R")
 
 # increase maximum image upload size to allow for larger image input
 options(shiny.maxRequestSize = 100*1024^2)
@@ -23,7 +24,9 @@ ui <- fluidPage(
       h4("Stereographic Hemispherical Image"),
       uiOutput("hemiImage"),
       h4("Forest Floor"),
-      uiOutput("forestFloorImage")
+      uiOutput("forestFloorImage"),
+      h4("Understory"),
+      uiOutput("understoryImage")
     )
   )
 )
@@ -32,6 +35,7 @@ server <- function(input, output, session) {
   image_data <- reactiveVal(NULL)
   hemi_data <- reactiveVal(NULL)
   floor_data <- reactiveVal(NULL)
+  understory_data <- reactiveVal(NULL)
 
   observeEvent(input$image, {
     req(input$image)
@@ -41,15 +45,20 @@ server <- function(input, output, session) {
     file.copy(infile, working_path, overwrite = TRUE)
     equirectangular_to_hemi_ffmpeg(filename = working_path)
     get_forest_floor(filename = working_path)
+    get_understory(filename = working_path)
 
     image_data(input$image$name)
     hemi_data(paste0(tools::file_path_sans_ext(input$image$name), "_hemi.jpg"))
-    # floor_data(paste0(tools::file_path_sans_ext(input$image$name), "_zoomed.jpg"))
 
     # Store all 4 quadrant image paths
     quadrants <- c("top_left", "top_right", "bottom_left", "bottom_right")
     zoomed_images <- paste0(tools::file_path_sans_ext(input$image$name), "_", quadrants, "_zoomed.jpg")
     floor_data(zoomed_images)
+
+    # Get understory image paths
+    directions <- c("east", "north", "south", "west")
+    understory_images <- paste0(tools::file_path_sans_ext(input$image$name), "_", directions, "_understory.jpg")
+    understory_data(understory_images)
 
     output$originalImage <- renderUI({
       req(image_data())
@@ -66,6 +75,13 @@ server <- function(input, output, session) {
       req(floor_data())
       tagList(
         lapply(floor_data(), function(img) {
+          tags$img(src = img, style = "max-width: 48%; margin: 1%; height: auto;")
+        }))})
+
+    output$understoryImage <- renderUI({
+      req(understory_data())
+      tagList(
+        lapply(understory_data(), function(img) {
           tags$img(src = img, style = "max-width: 48%; margin: 1%; height: auto;")
         }))})
   })
