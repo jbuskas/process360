@@ -11,22 +11,62 @@ source("get_understory.R")
 options(shiny.maxRequestSize = 100*1024^2)
 
 ui <- fluidPage(
-  titlePanel("Image Upload and Transformation"),
+  tags$head(
+    tags$style(HTML("
+      body {
+        background-color: #f5f5f5;
+        font-family: 'Segoe UI', sans-serif;
+      }
+      .title {
+        color: #2c3e50;
+        text-align: center;
+        margin-bottom: 30px;
+      }
+      .panel-heading {
+        font-size: 18px;
+        font-weight: bold;
+        color: #34495e;
+        margin-top: 20px;
+      }
+      .image-section {
+        background-color: #ffffff;
+        padding: 15px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+      }
+    "))
+  ),
+
+  titlePanel(div("360 Image Transformation", class = "title")),
 
   sidebarLayout(
     sidebarPanel(
+      tags$h4("Upload Your Image"),
       fileInput("image", "Choose an Image File",
-                accept = c('image/png', 'image/jpeg'))),
+                accept = c('image/png', 'image/jpeg')),
+      helpText("Supported formats: JPEG, PNG"),
+      tags$hr(),
+      tags$p("This application transforms an equirectangular 360 image into multiple views of the forest.")
+    ),
 
     mainPanel(
-      h4("Original Image"),
-      uiOutput("originalImage"),
-      h4("Stereographic Hemispherical Image"),
-      uiOutput("hemiImage"),
-      h4("Forest Floor"),
-      uiOutput("forestFloorImage"),
-      h4("Understory"),
-      uiOutput("understoryImage")
+      div(class = "image-section",
+          div(class = "panel-heading", "Original Image"),
+          uiOutput("originalImage")
+      ),
+      div(class = "image-section",
+          div(class = "panel-heading", "Stereographic Hemispherical Image"),
+          uiOutput("hemiImage")
+      ),
+      div(class = "image-section",
+          div(class = "panel-heading", "Forest Floor"),
+          uiOutput("forestFloorImage")
+      ),
+      div(class = "image-section",
+          div(class = "panel-heading", "Understory"),
+          uiOutput("understoryImage")
+      )
     )
   )
 )
