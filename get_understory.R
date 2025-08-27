@@ -22,7 +22,7 @@ get_understory <- function(filename=NULL) {
   # Generate zoomed images for each quadrant
   for (dir in names(directions)) {
     yaw <- directions[[dir]]
-    output_file <- sprintf("%s_%s_understory2.jpg", tools::file_path_sans_ext(filename), dir)
+    output_file <- sprintf("%s_%s_understory.jpg", tools::file_path_sans_ext(filename), dir)
     conversion <- sprintf("ffmpeg -i %s -vf v360=e:sg:yaw=%s,scale=1750:-1,zoompan=z=3:x=583:y=583:s=1750x1750:d=1  -y %s", filename, yaw, output_file)
     system(conversion)
   }

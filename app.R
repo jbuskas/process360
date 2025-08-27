@@ -2,6 +2,7 @@ library(shiny)
 library(dplyr)
 library(bslib)
 library(magick)
+library(RSQLite)
 
 source("equirectangular_to_hemi_ffmpeg.R")
 source("get_forest_floor.R")
@@ -38,16 +39,18 @@ ui <- fluidPage(
     "))
   ),
 
-  titlePanel(div("360 Image Transformation", class = "title")),
+  titlePanel(div("Database of 360 Image Transformations", class = "title")),
 
   sidebarLayout(
     sidebarPanel(
-      tags$h4("Upload Your Image"),
-      fileInput("image", "Choose an Image File",
-                accept = c('image/png', 'image/jpeg')),
-      helpText("Supported formats: JPEG, PNG"),
+      tags$h4("Site Selection"),
+      selectInput(
+        "select",
+        "Select a site below:",
+        list("Choice Site1" = "C:\\Users\\jbuskas\\OneDrive - NRCan RNCan\\Project\\process360\\www", "choice Site2" = "Site2")
+      ),
       tags$hr(),
-      tags$p("This application transforms an equirectangular 360 image into multiple views of the forest.")
+      tags$p("This application shows the transformation of an equirectangular 360 image into multiple views of the forest.")
     ),
 
     mainPanel(
@@ -72,13 +75,21 @@ ui <- fluidPage(
 )
 
 server <- function(input, output, session) {
+  con <- dbConnect(RSQLite::SQLite(), "data/image_database.sqlite")
+
   image_data <- reactiveVal(NULL)
   hemi_data <- reactiveVal(NULL)
   floor_data <- reactiveVal(NULL)
   understory_data <- reactiveVal(NULL)
 
-  observeEvent(input$image, {
-    req(input$image)
+  observe({
+    sites <- dbGetQuery(con, "SELECT DISTINCT site FROM images")
+    updateSelectInput(session, "select", choices = sites$site)
+  })
+
+  observeEvent(input$select, {
+    req(input$select)
+
     infile <- input$image$datapath
     print(infile)
     working_path <- file.path("www", input$image$name)
