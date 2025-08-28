@@ -17,15 +17,18 @@ dbExecute(con, "
   )
 ")
 
+# Clear existing data
+dbExecute(con, "DELETE FROM images")
+
 # Insert sample data
 dbExecute(con, "
   INSERT INTO images (site, original_image, hemi_image, forest_floor_images, understory_images)
   VALUES (
     'Site1',
-    'C:\\Users\\jbuskas\\OneDrive - NRCan RNCan\\Project\\process360\\www\\testSite1\\IMG_20250526_102917_00_205.jpg',
-    'C:\\Users\\jbuskas\\OneDrive - NRCan RNCan\\Project\\process360\\www\\testSite1\\IMG_20250526_102917_00_205_hemi.jpg',
-    'www\\testSite1\\IMG_20250526_102917_00_205_top_left_zoomed.jpg,www\\testSite1\\IMG_20250526_102917_00_205_top_right_zoomed.jpg,www\\testSite1\\IMG_20250526_102917_00_205_bottom_left_zoomed.jpg,www\\testSite1\\IMG_20250526_102917_00_205_bottom_right_zoomed.jpg',
-    'www\\testSite1\\IMG_20250526_102917_00_205_east_understory2.jpg,www\\testSite1\\IMG_20250526_102917_00_205_north_understory2.jpg,www\\testSite1\\IMG_20250526_102917_00_205_south_understory2.jpg,www\\testSite1\\IMG_20250526_102917_00_205_west_understory2.jpg'
+    'testSite1\\IMG_20250526_102917_00_205.jpg',
+    'testSite1\\IMG_20250526_102917_00_205_hemi.jpg',
+    'testSite1\\IMG_20250526_102917_00_205_top_left_zoomed.jpg,testSite1\\IMG_20250526_102917_00_205_top_right_zoomed.jpg,testSite1\\IMG_20250526_102917_00_205_bottom_left_zoomed.jpg,testSite1\\IMG_20250526_102917_00_205_bottom_right_zoomed.jpg',
+    'testSite1\\IMG_20250526_102917_00_205_east_understory2.jpg,testSite1\\IMG_20250526_102917_00_205_north_understory2.jpg,testSite1\\IMG_20250526_102917_00_205_south_understory2.jpg,testSite1\\IMG_20250526_102917_00_205_west_understory2.jpg'
   )
 ")
 

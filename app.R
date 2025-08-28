@@ -4,9 +4,9 @@ library(bslib)
 library(magick)
 library(RSQLite)
 
-source("equirectangular_to_hemi_ffmpeg.R")
-source("get_forest_floor.R")
-source("get_understory.R")
+# source("equirectangular_to_hemi_ffmpeg.R")
+# source("get_forest_floor.R")
+# source("get_understory.R")
 
 # increase maximum image upload size to allow for larger image input
 options(shiny.maxRequestSize = 100*1024^2)
@@ -47,7 +47,7 @@ ui <- fluidPage(
       selectInput(
         "select",
         "Select a site below:",
-        list("Choice Site1" = "C:\\Users\\jbuskas\\OneDrive - NRCan RNCan\\Project\\process360\\www", "choice Site2" = "Site2")
+        list("Site1" = "Site1", "choice Site2" = "Site2")
       ),
       tags$hr(),
       tags$p("This application shows the transformation of an equirectangular 360 image into multiple views of the forest.")
@@ -77,64 +77,64 @@ ui <- fluidPage(
 server <- function(input, output, session) {
   con <- dbConnect(RSQLite::SQLite(), "data/image_database.sqlite")
 
-  image_data <- reactiveVal(NULL)
-  hemi_data <- reactiveVal(NULL)
-  floor_data <- reactiveVal(NULL)
-  understory_data <- reactiveVal(NULL)
-
   observe({
     sites <- dbGetQuery(con, "SELECT DISTINCT site FROM images")
     updateSelectInput(session, "select", choices = sites$site)
   })
 
+  image_data <- reactiveVal(NULL)
+  hemi_data <- reactiveVal(NULL)
+  floor_data <- reactiveVal(NULL)
+  understory_data <- reactiveVal(NULL)
+
   observeEvent(input$select, {
     req(input$select)
 
-    infile <- input$image$datapath
-    print(infile)
-    working_path <- file.path("www", input$image$name)
-    file.copy(infile, working_path, overwrite = TRUE)
-    equirectangular_to_hemi_ffmpeg(filename = working_path)
-    get_forest_floor(filename = working_path)
-    get_understory(filename = working_path)
+    # Query the database for the selected site
+    query <- dbGetQuery(con, sprintf("SELECT * FROM images WHERE site = '%s'", input$select))
 
-    image_data(input$image$name)
-    hemi_data(paste0(tools::file_path_sans_ext(input$image$name), "_hemi.jpg"))
+    # Extract image paths
+    image_data(query$original_image[1])
+    hemi_data(query$hemi_image[1])
+    floor_data(strsplit(query$forest_floor_images[1], ",")[[1]])
+    understory_data(strsplit(query$understory_images[1], ",")[[1]])
 
-    # Store all 4 quadrant image paths
-    quadrants <- c("top_left", "top_right", "bottom_left", "bottom_right")
-    zoomed_images <- paste0(tools::file_path_sans_ext(input$image$name), "_", quadrants, "_zoomed.jpg")
-    floor_data(zoomed_images)
-
-    # Get understory image paths
-    directions <- c("east", "north", "south", "west")
-    understory_images <- paste0(tools::file_path_sans_ext(input$image$name), "_", directions, "_understory.jpg")
-    understory_data(understory_images)
-
+    # Render UI outputs
     output$originalImage <- renderUI({
       req(image_data())
+      print(paste("Original image path:", image_data()))
       tags$img(src = image_data(), style = "max-width: 100%; height: auto;")
     })
 
     output$hemiImage <- renderUI({
       req(hemi_data())
+      print(paste("hemi_data path:", hemi_data()))
       tags$img(src = hemi_data(), style = "max-width: 100%; height: auto;")
     })
 
-
     output$forestFloorImage <- renderUI({
       req(floor_data())
+      print(paste("floor_data path:", floor_data()))
       tagList(
         lapply(floor_data(), function(img) {
           tags$img(src = img, style = "max-width: 48%; margin: 1%; height: auto;")
-        }))})
+        })
+      )
+    })
 
     output$understoryImage <- renderUI({
       req(understory_data())
+      print(paste("understory_data path:", understory_data()))
       tagList(
         lapply(understory_data(), function(img) {
           tags$img(src = img, style = "max-width: 48%; margin: 1%; height: auto;")
-        }))})
+        })
+      )
+    })
+  })
+
+  onStop(function() {
+    dbDisconnect(con)
   })
 }
 
